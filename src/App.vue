@@ -1,13 +1,17 @@
 <script setup>
-import {ref, onMounted} from 'vue'
+import {ref, onMounted, computed} from 'vue'
 import WeatherSummary from './components/WeatherSummary.vue'
 import Highlights from './components/Highlights.vue'
 import Coords from './components/Coords.vue'
 import Humidity from './components/Humidity.vue'
 import {API_KEY, BASE_URL} from './constants'
+import {capitalizeFirstLetter} from './utils'
 
 const city = ref('Paris')
 const weatherInfo = ref(null)
+const isError = computed(() => {
+  return weatherInfo.value?.cod !== 200
+})
 
 function getWeather() {
   fetch(`${BASE_URL}?q=${city.value}&appid=${API_KEY}&units=metric`)
@@ -16,6 +20,7 @@ function getWeather() {
 }
 
 onMounted(getWeather)
+
 </script>
 
 <template>
@@ -24,23 +29,30 @@ onMounted(getWeather)
       <div class="container">
         <div class="laptop">
           <div class="sections">
-            <section class="section section-left">
+            <section :class="['section', 'section-left', {'section-error': isError}]">
               <div class="info">
                 <div class="city-inner">
                   <input v-model="city" type="text" class="search" @keyup.enter="getWeather">
                 </div>
 
-                <WeatherSummary :weatherInfo="weatherInfo"/>
-
+                <WeatherSummary v-if="!isError" :weatherInfo="weatherInfo"/>
+                <div v-else class="error">
+                  <div class="error-title">
+                    Ooooops! Something went wrong
+                  </div>
+                  <div v-if="weatherInfo?.message" class="error-message">
+                    {{ capitalizeFirstLetter(weatherInfo?.message) }}
+                  </div>
+                </div>
               </div>
             </section>
-            <section class="section section-right">
+            <section v-if="!isError" class="section section-right">
 
               <Highlights :weatherInfo="weatherInfo"/>
 
             </section>
           </div>
-          <div v-if="weatherInfo?.weather" class="sections">
+          <div v-if="!isError" class="sections">
 
             <Coords :coord="weatherInfo.coord"/>
             <Humidity :humidity="weatherInfo.main.humidity"/>
@@ -82,6 +94,11 @@ onMounted(getWeather)
 
   @media (max-width: 767px)
     width: 100%
+    padding-right: 0
+
+  &.section-error
+    min-width: 235px
+    width: auto
     padding-right: 0
 
 .section-right
@@ -134,4 +151,15 @@ onMounted(getWeather)
 
   @media (max-width: 767px)
     width: 100%
+
+.error
+  padding-top: 20px
+
+  &-title
+    font-size: 18px
+    font-weight: 700
+
+  &-message
+    padding-top: 10px
+    font-size: 13px
 </style>

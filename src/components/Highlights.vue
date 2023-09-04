@@ -1,14 +1,29 @@
 <script setup>
+import {computed} from "vue";
+import {getPressureMn, getTime} from "../utils";
+
 const props = defineProps({
   weatherInfo: {
     type: [Object, null],
     required: true
   }
 })
+const timezone = computed(() => {
+  return props.weatherInfo?.timezone
+})
+
+const sunriseTime = computed(() => {
+  return getTime(props.weatherInfo?.sys?.sunrise + timezone.value)
+})
+
+const sunsetTime = computed(() => {
+  return getTime(props.weatherInfo?.sys?.sunset + timezone.value)
+})
+
 </script>
 
 <template>
-  <div v-if="weatherInfo?.weather" class="section highlights">
+  <div class="section highlights">
     <div class="title">
       Today's Highlights
     </div>
@@ -75,7 +90,7 @@ const props = defineProps({
             <div class="card-centered">
               <div class="info-main">
                 <div class="info-main-num">
-                  765
+                  {{ getPressureMn(weatherInfo?.main?.pressure) }}
                 </div>
                 <div class="info-main-text">
                   mm
@@ -91,7 +106,7 @@ const props = defineProps({
           <div class="card-small-info">
             <div class="card-small-data">
               <div class="info-main-num">
-                21
+                {{ Math.round(weatherInfo?.main?.feels_like) }}
               </div>
               <div class="info-main-text">
                 °C
@@ -120,7 +135,7 @@ const props = defineProps({
                   Sunrise
                 </div>
                 <div class="state-time">
-                  07:31:42
+                  {{ sunriseTime }}
                 </div>
               </div>
               <div class="state">
@@ -129,7 +144,7 @@ const props = defineProps({
                   Sunset
                 </div>
                 <div class="state-time">
-                  18:34:19
+                  {{ sunsetTime }}
                 </div>
               </div>
             </div>
@@ -142,7 +157,7 @@ const props = defineProps({
           <div class="card-small-info">
             <div class="card-small-data">
               <div class="info-main-num">
-                80
+                {{ weatherInfo?.clouds?.all }}
               </div>
               <div class="info-main-text">
                 %
